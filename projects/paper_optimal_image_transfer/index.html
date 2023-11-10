@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<!-- _layouts/distill.html --><html>
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">    <!-- Metadata, OpenGraph and Schema.org -->
+    
+
+    <!-- Standard metadata -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Optimal Image Transport on Sparse Dictionaries | Junqing  Huang</title>
+    <meta name="author" content="Junqing  Huang">
+    <meta name="description" content="We derive a novel optimal image transport algorithm over sparse dictionaries by taking advantage of Sparse Representation (SR) and Optimal Transport (OT). Concisely, we design a unified optimization framework in which the individual image features (color, textures, styles, etc.) are encoded using sparse representation compactly, and an optimal transport plan is then inferred between two learned dictionaries in accordance with the encoding process. This paradigm gives rise to a simple but effective way for simultaneous image representation and transformation, which is also empirically solvable because of the moderate size of sparse coding and optimal transport sub-problems. We demonstrate its versatility and many benefits to different image-to-image translation tasks, in particular image color transform and artistic style transfer, and show the plausible results for photo-realistic transferred effects.">
+    <meta name="keywords" content="jekyll, jekyll-theme, academic-website, portfolio-website">
+
+
+    <!-- Bootstrap & MDB -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-DF7Zhf293AJxJNTmh5zhoYYIMs2oXitRfBjY+9L//AY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
+
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.1/css/academicons.min.css" integrity="sha256-i1+4qU2G2860dGGIOJscdC30s9beBXjFfzjWLjBRsBg=" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700%7CRoboto+Slab:100,300,400,500,700%7CMaterial+Icons">
+
+    <!-- Code Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jwarby/jekyll-pygments-themes@master/github.css" media="" id="highlight_theme_light">
+
+    <!-- Styles -->
+    
+    <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;">
+    
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="canonical" href="http://localhost:4000/projects/paper_optimal_image_transfer/">
+    
+    <!-- Dark Mode -->
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jwarby/jekyll-pygments-themes@master/native.css" media="none" id="highlight_theme_dark">
+
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/dark_mode.js"></script>
+    
+
+
+    <!-- jQuery -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <!-- MathJax -->
+  <script type="text/javascript">
+    window.MathJax = {
+      tex: {
+        tags: 'ams'
+      }
+    };
+  </script>
+  <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js"></script>
+  <script defer src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+    <!-- Distill js -->
+    <script src="/assets/js/distillpub/template.v2.js"></script>
+    <script src="/assets/js/distillpub/transforms.v2.js"></script>
+    <script src="/assets/js/distillpub/overrides.js"></script>
+    
+    <!-- Page/Post style -->
+    <style type="text/css">
+      .fake-img {
+  background: #bbb;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+} .fake-img p {
+  font-family: monospace;
+  color: white;
+  text-align: left;
+  margin: 12px 0;
+  text-align: center;
+  font-size: 16px;
+}
+
+    </style>
+  </head>
+
+  <body>
+<d-front-matter>
+    <script async type="text/json">{
+      "title": "Optimal Image Transport on Sparse Dictionaries",
+      "description": "We derive a novel optimal image transport algorithm over sparse dictionaries by taking advantage of Sparse Representation (SR) and Optimal Transport (OT). Concisely, we design a unified optimization framework in which the individual image features (color, textures, styles, etc.) are encoded using sparse representation compactly, and an optimal transport plan is then inferred between two learned dictionaries in accordance with the encoding process. This paradigm gives rise to a simple but effective way for simultaneous image representation and transformation, which is also empirically solvable because of the moderate size of sparse coding and optimal transport sub-problems. We demonstrate its versatility and many benefits to different image-to-image translation tasks, in particular image color transform and artistic style transfer, and show the plausible results for photo-realistic transferred effects.",
+      "comments": "",
+      "published": "May 20, 2023",
+      "authors": [
+        {
+          "author": "Junqing Huang<sup>&#9833</sup>",
+          "authorURL": "https://ruzhansky.org",
+          "affiliations": [
+            {
+              "name": "<sup>&#9833</sup>Analysis, Logic and Discrete Mathematics, Department of Mathematics, Ghent University",
+              "url": ""
+            }
+          ]
+        }
+        ,
+        
+        {
+          "author": "Haihui Wang<sup>&#9835</sup>",
+          "authorURL": "https://math.buaa.edu.cn/szdw/axbck/yysxx/whh.htm",
+          "affiliations": [
+            {
+              "name": "<sup>&#9835</sup>School of Mathematics, Beihang University",
+              "url": ""
+            }
+          ]
+        }
+        ,
+        
+        {
+          "author": "Andreas Weiermann<sup>&#9833</sup>",
+          "authorURL": "http://cage.ugent.be/~weierman/",
+          "affiliations": [
+            {
+              "name": "",
+              "url": ""
+            }
+          ]
+        }
+        ,
+        
+        {
+          "author": "Michael Ruzhansky<sup>&#9833,&#9834</sup>",
+          "authorURL": "https://ruzhansky.org",
+          "affiliations": [
+            {
+              "name": "<sup>&#9834</sup>School of Mathematical Sciences, Queen Mary University of London",
+              "url": ""
+            }
+          ]
+        }
+        
+        
+      ],
+      "katex": {
+        "delimiters": [
+          {
+            "left": "$",
+            "right": "$",
+            "display": false
+          },
+          {
+            "left": "$$",
+            "right": "$$",
+            "display": true
+          }
+        ]
+      }
+    }</script>
+  </d-front-matter>
+
+  
+
+    <!-- Header -->
+    <header>
+
+      <!-- Nav Bar -->
+      <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+        <div class="container">
+          <a class="navbar-brand title font-weight-lighter" href="/"><span class="font-weight-bold">Junqing </span>Huang</a>
+          <!-- Navbar Toggle -->
+          <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar top-bar"></span>
+            <span class="icon-bar middle-bar"></span>
+            <span class="icon-bar bottom-bar"></span>
+          </button>
+
+          <div class="collapse navbar-collapse text-right" id="navbarNav">
+            <ul class="navbar-nav ml-auto flex-nowrap">
+
+              <!-- About -->
+              <li class="nav-item ">
+                <a class="nav-link" href="/">Home</a>
+              </li>
+              
+              
+              <!-- Other pages -->
+              <li class="nav-item ">
+                <a class="nav-link" href="/publications/">Publications</a>
+              </li>
+              <li class="nav-item ">
+                <a class="nav-link" href="/projects/">Projects</a>
+              </li>
+              <li class="nav-item ">
+                <a class="nav-link" href="/repositories/">Code/Software</a>
+              </li>
+
+              <!-- Blog -->
+              <li class="nav-item ">
+                <a class="nav-link" href="/blog/">Gallery</a>
+              </li>
+
+
+              <!-- Toogle theme mode -->
+              <li class="toggle-container">
+                <button id="light-toggle" title="Change theme">
+                  <i class="fas fa-moon"></i>
+                  <i class="fas fa-sun"></i>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Scrolling Progress Bar -->
+      <progress id="progress" value="0">
+        <div class="progress-container">
+          <span class="progress-bar"></span>
+        </div>
+      </progress>
+    </header>
+
+
+    <!-- Content -->
+    <div class="post distill">
+
+      <d-title>
+        <div class="l-page">
+          <h1>Optimal Image Transport on Sparse Dictionaries</h1>
+          
+        </div>
+      </d-title>
+  
+      <d-byline></d-byline> 
+      
+    
+
+      <d-article>
+        <!--<d-contents>
+            <nav class="l-text figcaption">
+            <h3>Contents</h3>
+              <div><a href="#abstract">Abstract</a></div>
+              <div><a href="#introduction">Introduction</a></div>
+              <div><a href="#footnotes">Footnotes</a></div>
+              <div><a href="#code-blocks">Code Blocks</a></div>
+              <div><a href="#layouts">Layouts</a></div>
+              <div><a href="#other-typography">Other Typography?</a></div>
+              
+            </nav>
+        </d-contents>-->
+        <div class="l-page">
+          <div class="row justify-content-md-center"> 
+  <div class="col col-lg-12">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/Fig1_full-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/Fig1_full-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/Fig1_full-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/Fig1_full.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+</div>
+
+<div class="caption">
+    Figure 1. An illustration of optimal image transfer on sparse dictionaries. Given a content image Fig. 1a and reference image Fig. 1b, the proposed method learns the individual dictionaries Fig.1c and then derives an optimal transport plan over the learned dictionaries, giving the transferred results Fig. 1b and Fig. 1d, respectively.
+</div>
+
+<h2 id="abstract">Abstract:</h2>
+
+<p>In this paper, we derive a novel optimal image transport algorithm over sparse dictionaries by taking advantage of Sparse Representation (SR) and Optimal Transport (OT). Concisely, we design a unified optimization framework in which the individual image features (color, textures, styles, etc.) are encoded using sparse representation compactly, and an optimal transport plan is then inferred between two learned dictionaries in accordance with the encoding process. This paradigm gives rise to a simple but effective way for simultaneous image representation and transformation, which is also empirically solvable because of the moderate size of sparse coding and optimal transport sub-problems. We demonstrate its versatility and many benefits to different image-to-image translation tasks, in particular image color transform and artistic style transfer, and show the plausible results for photo-realistic transferred effects.</p>
+
+<h2 id="introduction">Introduction:</h2>
+
+<p>Image-to-image translation is an interesting but rather challenging image synthesis problem in image processing and computer vision fields. Recent studies have shown that many vision-based tasks can be posed as a special style transfer problem within the image-to-image translation framework, for example, image color matching<d-cite key="reinhard2001color, morovic2003accurate"></d-cite> and transfer<d-cite key="pitie2007linear, ferradans2014regularized, rabin2014adaptive, frigo2014optimal, hristova2015style"></d-cite>, image super-resolution<d-cite key="yang2010image, wang2012semi"></d-cite>, texture synthesis<d-cite key="efros2001image, gatys2015texture"></d-cite>, non-photorealistic rendering<d-cite key="gooch2001non, kang2008flow"></d-cite> and artistic stylization<d-cite key="kyprianidis2012state, winnemoller2012xdog, gatys2016image, elad2017style, gatys2015texture, li2017universal"></d-cite> and so on. Despite the varying backgrounds and generalizations, they actually share a very similar goal — that is, automatically converting an image from one domain to another while preserving the semantic styles or contents for either better interpretation or visual-pleasant purposes.</p>
+
+<p>In a general sense, image translation problem can be formed as an admissible map in latent feature spaces while preserving the interest of contents or information (color, texture or styles, etc.). In nature, it is necessary to solve two fundamental sub-problems, that is, image encoding and feature transformation. The former is to seek a useful image representation tool to extract the discriminative or individual image styles, while the latter aims to infer an appropriate mapping for the encoded image styles while maintaining abstract information such as image structures, textures and high-level semantic characteristics. As illustrated hereafter, many vision-based tasks can be understood from the two sub-problems. The difference mainly underpins the process of image encoding and feature transformation. Image color matching<d-cite key="reinhard2001color, ferradans2014regularized, rabin2014adaptive"></d-cite>, for example, tends to take image intensities (or, hue and saturation) as a meta-representation and solves a mapping problem between color palettes to determine the transferred results. In contrast, it is crucial to have both concisely-designed image encoding and feature transformation for artistic image stylization  in view of the complexity of abstract styles. In many scenarios, it is also important for the encoding process to have a compact form for the sake of reducing computational cost, while the translation problem involves a special transport map between two distributions of individual image features. It has also witnessed recent efforts to address the two sub-problems for different image style transfer applications, including the ever-increasing deep learning-based methods <d-cite key="dong2014learning, gatys2015texture, gatys2016image, huang2017arbitrary"></d-cite>. Despite the great success, there is still considerable interest to exploit more easy-configured and powerful tools to achieve more visual-appealing results.</p>
+
+<p>In this paper, we propose a novel approach for image-to-image translation, in which an optimal transport map is directly posed on sparse dictionaries learned from sparse image coding. Specifically, sparse representation is applied as a feature extractor to encode the latent features of images. Optimal transport is subsequently inferred over the learned dictionaries to provide an optimal styles-swapping plan in accordance with the style encoding process. This new model, as shown in Fig. 1, inherits two-fold benefits of sparse representation and optimal transport. On the one hand, sparse representation provides us a maneuverable and easy-understood image editing tool to encode the semantic features of images, as it has been demonstrated in a variety of successful applications such as image denoising<d-cite key="aharon2006k"></d-cite> and super-resolution <d-cite key="yang2010image"></d-cite>. On the other hand, optimal transport allows us to swap the encoded features or styles based on a linear mapping. Moreover, the size of learned dictionaries is moderate in practice, which also helps to alleviate the high computational cost of the native optimal transport. We will illustrate that this new paradigm, with a slight relaxation, is empirically solvable and gives rise to a closed-form solution to many image translation problems. We also demonstrate its versatility and many benefits to image-to-image translation with two typical tasks: color transform and artistic style transfer, and show their high-quality transferred results.</p>
+
+<h2 id="related-work">Related work</h2>
+
+<p>Image-to-image translation, as aforementioned, covers a wide range of vision-based tasks despite their different backgrounds and generalizations. We briefly review some existing color transform and artistic style transfer methods, in particular the ones for photo-realistic results because of the close connections to the proposed optimal style transfer on sparse dictionaries.</p>
+
+<p>Color matching or transfer is a typical image-to-image translation application keen on photo-realistic results. The purpose is straightforward, that is, to alter color appearance of an image based on a reference image<d-cite key="hristova2015style, reinhard2001color, xiao2006color"></d-cite>.  In the early stage,  color transfer is usually posed as a one-dimensional histogram matching problem between two color distributions — for example, histogram equalization or specification. As suggested in the pioneering work<d-cite key="reinhard2001color"></d-cite>, color transfer is implemented by matching their global statistical mean and covariance of two images. Such a strategy is then extended to other color space<d-cite key="morovic2003accurate, xiao2006color"></d-cite> or combined with the lightness and brightness information<d-cite key="hristova2015style"></d-cite>. They, however, may produce non-harmonic results because of the non-consistent color distributions of natural images. Other methods<d-cite key="faridul2014survey, hristova2015style, tai2005local"></d-cite> also resort to some color segmentation techniques for local color matching, while such a strategy is highly dependent on the semantic constraints for color segmentation in practice.</p>
+
+<p>To reduce the notorious non-harmonic artifacts, recent advances based on optimal transport<d-cite key="ferradans2014regularized, pitie2007linear"></d-cite> have gained great attention in color transfer applications. The work can be dated back to the study of histogram-matching problems and the relation to optimal transport for gray images<d-cite key="delon2004midway, morovic2003accurate"></d-cite>. Such a strategy is then extended to color images and videos. The assigned color could more or less avoid the undesired visual artifacts. It is worth noting that the transport map is mostly deduced from the discrete samplings, the solution may be not reachable for a very large-scale problem, for example, in the cases of using optimal transport, where a naive optimal transport has a \(\mathcal{O}(n^3)\) complexity for \(n\) pair samples. More recently, the relaxed and regularized OT methods are also explored for color transfer to tackle the high computational cost. However, as pointed out in <d-cite key="ferradans2014regularized, rabin2014adaptive"></d-cite>, an exact transform of color distributions is not enough in practical applications because color densities may have very different shapes and outliers. As a consequence, the transfer performance may be limited by the sampling and interpolation processes.</p>
+
+<p>Simultaneously, image style transfer — which is mostly dedicated to non-photorealistic image rendering for artistic effects, has been extensively studied for the long-standing dream of generating attractive artworks automatically. Most traditional methods are either based on line-drawing and stroke-based rendering techniques to produce the prescribed effects, including image stippling<d-cite key="kim2009stippling"></d-cite>,  pencil sketching<d-cite key="kang2008flow, winnemoller2012xdog"></d-cite>, watercolor<d-cite key="bousseau2006interactive"></d-cite>, oil painting<d-cite key="gooch2002artistic, hertzmann1998painterly"></d-cite>, and so on. As shown in difference-of-Gaussians (DoG) operator<d-cite key="winnemoller2012xdog"></d-cite> and flow-based filtering<d-cite key="kang2008flow"></d-cite>, they boost the salient line features or main structures of images, and help to yield aesthetically pleasing lines when synthesizing line drawings and cartoon-like art effects. The stroke-based rendering technique is another prevalent strategy for artistic image stylization<d-cite key="kang2008flow, winnemoller2012xdog"></d-cite>, in which the brush strokes are iteratively aligned according to the variants of local color, size, and orientation information. With careful design, it is possible to generate high-quality results for some prescribed styles but may be limited in style diversity. The reader is referred to the surveys<d-cite key="gooch2002artistic, winnemoller2012xdog, kyprianidis2012state"></d-cite> for more details.</p>
+
+<p>More recently, it has also witnessed the great success of neural style transfer with the renaissance of deep learning methods. In the pioneering work<d-cite key="gatys2016image"></d-cite>, for example, a novel iterative optimization scheme over a conventional neural network is proposed to match the learned features within a pre-trained classification network. The idea is subsequently developed by many deep learning methods for more efficient stylization<d-cite key="huang2017arbitrary, xia2021real"></d-cite>, stroke-based paintings<d-cite key="liu2021paint, tong2022im2oil, zou2021stylized"></d-cite> and universal style transfer<d-cite key="deng2022stytr2, gu2018arbitrary, hong2021domain, huang2023quantart, isola2017image, johnson2016perceptual, kotovenko2019content, li2017universal, liu2017unsupervised"></d-cite>. In the last few years, it has also witnessed many efforts for photo-realistic style transfer<d-cite key="an2020ultrafast, ho2021deep, ke2023neural, luan2017deep, li2018closed, lu2019closed"></d-cite>. Despite the impressive artistic effects, they may suffer from some unpredictable effects with spatial distortions and artifacts which are not consistent with semantic interpretations or should not happen in real photographs, since it is still not comprehensively understood the mechanism of the deep encoding process. Recent studies have shown that the matching of features can be formulated as an optimal transport problem between the learned features for more favorable results<d-cite key="kolkin2019style, mroueh2020wasserstein"></d-cite>. The achievement of deep learning methods is largely due to the two-fold benefits of many deep learning architectures — that is, the encoding ability of neural networks offers a powerful and ubiquitous tool for high-level visual features, and the transformation map between deep features is also learnable during the training process. Moreover, many deep learning methods are usually limited by the availability of very large-scale training datasets. The reader is also referred to the work<d-cite key="isola2017image, jing2019neural, zhu2017unpaired"></d-cite> for more details of deep learning-based techniques.</p>
+
+<h2 id="preliminary">Preliminary</h2>
+
+<p>In this section, we briefly introduce sparse representation and optimal transport, as they form the key ingredients of the proposed model for image style (feature) encoding and transformation.</p>
+
+<div class="row justify-content-md-center"> 
+  <div class="col col-lg-10">
+      <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/fig2-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/fig2-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/fig2-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/fig2.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+  </div>
+</div>
+<div class="caption">
+    Figure 2. Sparse representation of an image with the distribution of dictionary.
+</div>
+
+<h3> Sparse Representation:</h3>
+
+<p>Sparse and redundant representation<d-cite key="aharon2006k, rubinstein2010dictionaries"></d-cite> has been used as a simple and important method for signal/image analysis and processing, in which the signal/image is assumed to be compactly approximated by a linear combination of a few fundamental elements — known as a basis set or a dictionary. One of the overwhelming benefits of sparse representation is to reduce the size of large-scale problems in signal/image processing fields since the majority of information is encoded by a small set of basis functions weighted by sparse coefficients. In image processing and computer vision fields, sparse representation provides an effective image editing tool to encode the latent middle-level vision features of images. The basis or dictionary of sparse representation can be either selected from a group of pre-defined functions such as discrete cosine transform (DCT) and wavelet or learned from training data. We here consider the learning-based dictionaries for better performance.</p>
+
+<p>Mathematically, let \(\mathbf{X}=\{\boldsymbol{x}_i\}_{i=1}^N\),\(\boldsymbol{x}_i \in \mathbb{R}^{d}\) be a set of data samplings, for example, the vectorized image patches, sparse representation then aims to discover a group of dictionary vectors \(\{\boldsymbol{d}_j\}_{j=1}^n, \boldsymbol{d}_i \in \mathbb{R}^{d},n \ll N\) (or, denoted as \(\mathbf{D}= [\boldsymbol{d}_1, \cdots, \boldsymbol{d}_n]\)) associated with the efficient matrix \(\mathbf{A}\in \mathbb{R}^{n \times N}\), which can be written as,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\mathbf{X} = \mathbf{D}\mathbf{A} \quad \text{s.t.} \left\|\boldsymbol{\alpha}_i\right\|_{0} \leq K,
+\end{aligned}
+\label{eq1}
+\end{equation}\]
+
+<p>where \(\boldsymbol{\alpha}_i \in \mathbb{R}^{n}\) denotes the represented coefficients of sampling \(\boldsymbol{x}_i\), corresponding to the \(i\)-th column vector of the coefficient matrix \(\mathbf{A}\), \(\left\|\cdot\right\|_{0}\) is known as pseudo \(L_0\)-norm counting the non-zero elements of a vector. The constraint \(\left\|\boldsymbol{\alpha}_i\right\|_{0} \leq K\) suggests that the number of non-zero entries in \(\boldsymbol{\alpha}_i\) is no more than \(K\). In other words, the coefficient \(\mathbf{A}\) has sparse characteristics, the assumption of which forms the nature of sparse representation.</p>
+
+<p>Despite the simple form, it is generally a challenging problem to give a direct solution for sparse representation because both dictionary \(\mathbf{D}\) and sparse coefficient matrix \(\mathbf{A}\) in Eq. \ref{eq1} are unknown in advance. Moreover, the solution is always not unique when solving one by fixing another. The problem is also known as an NP-hard in view of the non-convex \(L_0\)-norm constraint. In practice, it always resorts to some approximate algorithms such as the method of optimal directions (MOD)<d-cite key="engan1999method"></d-cite>, generalized PCA<d-cite key="vidal2005generalized"></d-cite> or K-SVD algorithm<d-cite key="aharon2006k"></d-cite> to give a solution. Other methods for approximate solutions may be based on relaxation techniques, for example, replacing the non-convex \(L_0\) constraint with its convex \(L_1\) approximation.</p>
+
+<p>The choice of an appropriate dictionary is also crucial to sparse representation for many practical applications. We here consider an example in Fig.  2 for interpretation.  The process starts with the cropped image patches that are randomly sampled from an image or a dataset. The data matrix \(\mathbf{X}\) is formed by concatenating these vectorized patches, and the dictionary \(\mathbf{D}\) and coefficient \(\mathbf{A}\) can be achieved by solving Eq. \ref{eq1} accordingly. Before diving deeper, we point here out that the row sum of the coefficient matrix is important to the proposed method, as it measures the frequency of each dictionary atom occurring in an image. Mathematically, it provides a probability distribution of image dictionary atoms. We will illustrate how to learn a pair of coupled dictionaries to represent the abstract styles of images in accordance with the optimal transport between learned dictionaries.</p>
+
+<h3> Optimal Transport :</h3>
+
+<p>Optimal transport is also a well-developed mathematical theory<d-cite key="villani2021topics"></d-cite>, which can be traced back to Monge’s problem and then discovered under different backgrounds<d-cite key="peyre2019computational, villani2021topics"></d-cite>. We here review the Monge problem and its Kantorovitch relaxation for the sake of complementary.</p>
+
+<p><strong>The Monge’s Problem:</strong> : Let \(\mu, \nu\) be two probability measures on two metric spaces \(\mathcal{X} \in \mathbb{R}^{n},\mathcal{Y} \in \mathbb{R}^{m}\), and given a cost function \(c(x, y): \mathcal{X} \times \mathcal{Y} \rightarrow [0, \infty]\), which represents the effort of transporting the mass from \(x \in \mathcal{X}\) to \(y \in \mathcal{Y}\), the Monge’s formulation aims to find a transport map \(T: \mathcal{X} \rightarrow \mathcal{Y}\), realizing the infimum of the function:</p>
+
+<p>\(\begin{equation}
+\begin{aligned}
+\inf_{T_{\sharp}\mu=\nu}{\int_{\mathcal{X}}{c(\mu,T(\mu)) d \nu(x)}},
+\end{aligned}
+\label{eq2}
+\end{equation}\)
+where \({T_{\sharp}\mu\stackrel{\text{def}}{=} \nu}\) is known as the \textit{push-forward} operator that pushes forward the mass of \(\mu\) to \(\nu\)<d-cite key="oberman2015efficient, peyre2019computational"></d-cite>. The transport map \(T\) attains when reaching the infimum, the existence of which in practice, however, is not always guaranteed, for example, when only one of \(\mu\) and \(\nu\) is a Dirac function.</p>
+
+<p><strong>The Kantorovitch Relaxation:</strong>  Alternatively, a simple relaxation of Monge’s problem initiated by Kantorovich is guaranteed to have a solution. The key idea is that the mass at any point of
+\(x\) can be potentially dispatched across several locations of \(y\). The equivalent Kantorovitch formulation of the optimal transport seeks for a probabilistic coupling \(\pi \in \mathcal{P}\left(\mathcal{X} \times \mathcal{Y} \right)\) between \(\mathcal{X}\) and \(\mathcal{Y}\)<d-cite key="peyre2019computational"></d-cite>:</p>
+
+\[\begin{equation}
+\begin{aligned}
+\inf_{\pi \in \Pi} \int_{\mathcal{X} \times \mathcal{Y}} c(x, y) \mathrm{d} \pi(x, y),
+\end{aligned}
+\label{eq3}
+\end{equation}\]
+
+<p>where \(\Pi\stackrel{\text{def}}{=}\left\{\pi \in\left(\mathbb{R}^{+}\right)^{\mathcal{X} \times \mathcal{Y}} \mid \pi_{\mathcal{X} }=\mu, \pi_{\mathcal{Y} }=\nu\right\}\) is the set of transportation plans with the joint distribution of marginals \(\mu\) and \(\nu\). In this formulation, \(\pi\) can be understood as a joint probability measure with marginals \(\mu\) and \(\nu\). The cost function \(c(x,y)\) can be chosen, for instance, as Euclidean distance between two locations \(x\) and \(y\), while other types of metrics could be considered, such as Riemann distances over a manifold.</p>
+
+<p><strong>Discrete Case:</strong>  In practice, the distributions \(\mu\) and \(\nu\) are always accessible through discrete samples, which leads to a discrete optimal transport problem<d-cite key="merigot2016discrete, peyre2019computational"></d-cite>. Considering two discrete probability measures \(\mu =: \sum^m_{i=1} \boldsymbol{a}_i {\delta}_{\boldsymbol{x}_i}\) and \(\nu =: \sum^n_{j=1} \boldsymbol{b}_j {\delta}_{\boldsymbol{y}_j}\) sampled from the source and target samples \(\left\{\boldsymbol{x}_{i}\right\}_{i=1}^{m}\), \(\left\{\boldsymbol{y}_{j}\right\}_{j=1}^{n}\) with \(\boldsymbol{x}_{i}, \boldsymbol{y}_{j} \in \mathbb{R}^d\), it is straightforward to rewrite the discrete Kantorovitch optimal transport as,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\min_{\mathbf{T} \in \Pi(\boldsymbol{a},\boldsymbol{b})} \langle \mathbf{C}, \mathbf{T} \rangle \stackrel{\text{def}}{=} \min_{\mathbf{T} \in \Pi(\boldsymbol{a},\boldsymbol{b})}{\sum_{i,j} \mathbf{C}_{i,j} \mathbf{T}_{i,j}}
+\end{aligned}
+\label{eq4}
+\end{equation}\]
+
+<p>where \(\mathbf{T}\) is a coupling matrix with entries \(\mathbf{T}_{i,j}\) describing the amount of mass flowing from \(\boldsymbol{a}_i\) to \(\boldsymbol{b}_j\) and \(\Pi(\boldsymbol{a},\boldsymbol{b}) \stackrel{\text{def}}{=} \{ \mathbf{T} \in \mathbb{R}_+^{m\times n} \vert \mathbf{T}\boldsymbol{1}_n =\boldsymbol{a},   \mathbf{T}^\top\boldsymbol{1}_m = \boldsymbol{b} \}\). The cost matrix  \(\mathbf{C}\in \mathbb{R}^{m \times n}\) has the entries \(\mathbf{C}_{\boldsymbol{i,j}} = c(\boldsymbol{x}_i,\boldsymbol{y}_j)\) specifying the transport effort between the location pair \((\boldsymbol{x}_i, \boldsymbol{y}_j)\).  %If \(n=m\), and \(\mu\), \(\nu\) are uniform measures, \(\Pi(\boldsymbol{a},\boldsymbol{b})\) is the Birkhoff polytope of size \(n\), and the solution of Eq.  \ref{eq4} is a permutation matrix.</p>
+
+<p>It is well-known that Eq. \ref{eq4} can be rewritten into a special linear program problem and solved using linear solvers such as network flow solver or transportation simplex<d-cite key="dantzig2016linear"></d-cite>. Despite the simple form, the linear solvers are also computationally expensive, especially for a large-scale case — for example, having \(\mathcal{O}{(n^3)}\) complexity for \(n\) pair samples with network flow solvers. In many practical tasks<d-cite key="perrot2016mapping, peyre2019computational"></d-cite>, the Sinkhorn’s algorithm<d-cite key="dvurechensky2018computational"></d-cite> is always chosen as a faster alternative method to solve such a discrete optimal transport approximately.</p>
+
+<div class="row">
+    <div class="col">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/fig3_a-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/fig3_a-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/fig3_a-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/fig3_a.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+    <div class="col">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/fig3_b-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/fig3_b-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/fig3_b-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/fig3_b.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+    <div class="col">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/fig3_c-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/fig3_c-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/fig3_c-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/fig3_c.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+    <div class="col">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/fig3_d-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/fig3_d-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/fig3_d-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/fig3_d.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+    <div class="col">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/fig3_e-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/fig3_e-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/fig3_e-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/fig3_e.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+  </div>
+
+<div class="caption">
+    Figure 3. An illustration of optimal transport over two dictionaries. Given the content and reference images, the proposed method firstly learns the individual dictionaries and then derives an optimal transport map between the learned dictionaries.
+</div>
+
+<h2 id="optimal-image-transfer">Optimal Image Transfer</h2>
+
+<p>We suggest that image-to-image translation problems can be implemented by means of sparse representation and optimal transport. Image transfer, as pointed out, aims to solve the feature encoding and  transformation problems. We illustrate that sparse representation provides an effective tool to encode the individual and discriminate features of different images since it has been used as a feature extractor in many image processing tasks. Sparse coefficients can be viewed as a counting process of dictionary elements, as shown in Fig.  2, which gives a probability measure to weigh the importance of each style element. Consequently, a transport plan between the encoded features is attainable and efficiently computed based on optimal transport under the small size of learned dictionaries (See Fig.  3).</p>
+
+<h3> Problem Formulation:</h3>
+
+<p>The proposed method starts with sparse representation to encode the latent styles of images and then transports the styles to reproduce a stylized image. For simplicity, we take into account an image transfer problem between two images \(x\) and \(y\) with the features or styles \(s_x\), \(s_y\), respectively. Without loss of generality, let \(\mathbf{X}=\{\boldsymbol{x}_i\}_{i=1}^M, \mathbf{Y}=\{\boldsymbol{y}_j\}_{j=1}^N, \boldsymbol{x}_i,\boldsymbol {y}_j \in \mathbb{R}^{d}\) be the vectorized patches sampled from image \(x\) and \(y\), the latent styles \(s_x\) and \(s_y\) can be expressed by sparse dictionaries given by,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\begin{cases}
+&amp;\mathbf{X} = \mathbf{D}^x\mathbf{A}, \qquad   s.t. \quad   {\lvert\lvert \boldsymbol{\alpha}_i \rvert\rvert}_0 \leq K_1,\\
+&amp;\mathbf{Y} = \mathbf{D}^y\mathbf{B}, \qquad   s.t. \quad   {\lvert\lvert \boldsymbol{\beta}_j \rvert\rvert}_0 \leq K_2,  
+\end{cases}
+\end{aligned}
+\label{eq5}
+\end{equation}\]
+
+<p>where \(\mathbf{D}^x = [\boldsymbol{d}_1^x, \cdots, \boldsymbol{d}_m^x]\) and \(\mathbf{D}^y= [\boldsymbol{d}_1^y, \cdots, \boldsymbol{d}_n^y]\) are the style dictionaries. We assume the entries \(\boldsymbol{d}_i^x,\boldsymbol{d}_j^y \in \mathbb{R}^{d}\) are in the same space. \(\mathbf{A} \in \mathbb{R}^{d\times M}, \mathbf{B} \in \mathbb{R}^{d\times N}\) contain the coefficient vectors \(\boldsymbol{\alpha}_i\) and \(\boldsymbol{\beta}_j\) of the \(i\)-th and \(j\)-th samplings \(\boldsymbol{x}_i\) and \(\boldsymbol{y}_j\). The constraints suggest the weights \(\boldsymbol{\alpha}_i\) and \(\boldsymbol{\beta}_j\) tend to be sparse — that is, the number of non-zero entries is less than the positive \(K_1\) (or, \(K_2\)).</p>
+
+<p>The dictionaries \(\mathbf{D}^x\) and \(\mathbf{D}^y\), in general cases, may not exactly encode the styles \(s_x\) and \(s_y\), while, as demonstrated hereafter, it is also enough to provide favorable transferring results for image transfer tasks. The use of sparse/redundant representation, on the one hand, is to find a compact and effective image editing tool for the latent styles. Notice that the size of dictionaries is always much less than samplings in practice, thus optimal transport between two dictionaries \(\mathbf{D}^x\) and \(\mathbf{D}^y\) is affordable even using linear program solver<d-cite key="dantzig2016linear"></d-cite>, which is significantly reduced the computational cost compared with the naive case over the samplings \(\mathbf{X}\) and \(\mathbf{Y}\). On the other hand, it is reasonable to assume that the weights of each element in learned dictionaries indicate the contribution of the latent style to an image. Notice also that the row sum of each row of coefficient matrices counts the total contribution of each style element. Let \(\boldsymbol{a}, \boldsymbol{b}\) be the row sum of coefficient matrices, we have \(\boldsymbol{a} = \boldsymbol{A}\boldsymbol{1}_M, \boldsymbol{b}  =\boldsymbol{B}\boldsymbol{1}_N\), where \(\boldsymbol{1}_M(N)\) is the vector with all \(M(N)\) entries being value 1; and  two discrete probability distributions \(\mu =: \sum^n_{i=1} \boldsymbol{a}_i {\delta}_{\boldsymbol{d}^x_i}\) and \(\nu =: \sum^m_{j=1}\boldsymbol{b}_j {\delta}_{\boldsymbol{d}^y_j}\) of the learned dictionaries, where \(\boldsymbol{a}_k\) and \(\boldsymbol{b}_k\) are the \(k\)-th element of \(\boldsymbol{a}\) and \(\boldsymbol{b}\), and \(\delta{(\cdot)}\) is the Dirac function. Recalling the Kantorovich relaxation of the transport problem in Sec. \ref{subsec3:optimal_transport}, we have an optimal transport on the learned dictionaries,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\min_{\mathbf{T} \in \Pi(\boldsymbol{a},\boldsymbol{b})} \langle \mathbf{C}, \mathbf{T} \rangle \stackrel{\text{def}}{=} {\sum_{i,j} \mathbf{C}_{i,j} \mathbf{T}_{i,j}},
+\end{aligned}
+\label{eq6}
+\end{equation}\]
+
+<p>where \(\mathbf{C}_{i,j} \stackrel{\text{def}}{=} c(\boldsymbol{d}^x_i, \boldsymbol{d}^y_j)\) is the ground cost function to move the dictionary element \(\boldsymbol{d}^x_i\) to \(\boldsymbol{d}^y_j\), and the transport mapping function \(\mathbf{T}\) satisfies,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\Pi(\boldsymbol{a},\boldsymbol{b}) \stackrel{\text{def}}{=} \{ \mathbf{T} \in R_+^{m\times n} \vert  \mathbf{T}\boldsymbol{1}_n = \boldsymbol{a},   \mathbf{T}^\top\boldsymbol{1}_m = \boldsymbol{b}\}.
+\end{aligned}
+\label{eq7}
+\end{equation}\]
+
+<p>In view of the above notations, we now interpret that the optimal style transfer over the learned style dictionaries, parameterized by \(\mathbf{T} \in R_{+}^{n \times m}\),  is generalized into,</p>
+
+\[\begin{equation}
+\begin{array}{rllc}
+		&amp;  \displaystyle \min_{\mathbf{T}} \langle \mathbf{C}, \mathbf{T} \rangle  \stackrel{\text{def}}{=}\displaystyle \min_{\mathbf{T}} \sum_{i,j} \mathbf{C}_{i,j} \mathbf{T}_{i,j} &amp; &amp;\\
+\text{s.t.} &amp; \mathbf{D}^x\mathbf{A} =\mathbf{X},           &amp; {\lvert\lvert \boldsymbol{\alpha}_i \rvert\rvert}_0 \leq K_1, 		&amp; 	 \\
+		&amp; \mathbf{D}^y\mathbf{B} = \mathbf{Y},          &amp; {\lvert\lvert \boldsymbol{\beta}_i \rvert\rvert}_0 \leq K_2, 			&amp; 	 \\
+		&amp; \mathbf{A}\boldsymbol{1}_M=\boldsymbol{a},     &amp; \mathbf{B}\boldsymbol{1}_N =\boldsymbol{b},		                &amp;    \\
+		&amp; \mathbf{T}\boldsymbol{1}_n = \boldsymbol{a},   &amp; \mathbf{T}^\top\boldsymbol{1}_m = \boldsymbol{b}. 	                &amp; 	
+\end{array}
+\label{eq8}
+\end{equation}\]
+
+<p>It is clear from Eq. \ref{eq8} that the objective function aims to infer an optimal transport plan between the learned style dictionaries, in which the first and second constraints are sparse representations for images, and the last two constraints specify the property distributions of dictionaries and the necessary conditions of transport plan. Despite the simple form of Eq. \ref{eq8}, it is not easy to solve due to the \(L_0\)-norm constraints. In what follows, a relaxed model of Eq. \ref{eq8} is further discussed with an approximate solution under some mild assumptions.</p>
+
+<p><strong>Relaxed Model:</strong>  As illustrated, image style transfer is formulated into an optimal transport over sparse dictionaries with both  sparse representation and optimal transport constraints. However, a direct solution to Eq. \ref{eq8} is not available due to two-fold facts: (1) the sparse coefficient constrains \({\lvert\lvert \boldsymbol{\alpha}_i\rvert\rvert}_0 \leq K_1\) and \({\lvert\lvert \boldsymbol{\beta}_i\rvert\rvert}_0 \leq K_2\) are non-convex and difficult to solve in practice; and (2) the sub-problem with respect to the variable \(\mathbf{A}\) is a typical Sylvester equation<d-cite key="bartels1972solution"></d-cite> constrained by \(\mathbf{D}^x\mathbf{A} =\mathbf{X}\) and \(\mathbf{A}\boldsymbol{1}_M = \boldsymbol{a}\)\footnote{The Sylvester equation has the form \(AX+XB=C\), whose solution is computational expensive in case of a large-scale problem<d-cite key="bartels1972solution"></d-cite>.}. As a result, it is necessary to reduce the problem for a more efficient solution.</p>
+
+<p>Paying attention to \(\mathbf{A}\boldsymbol{1}_M=\boldsymbol{a}\), \(\mathbf{B}\boldsymbol{1}_N = \boldsymbol{b}\), we have  \(\mathbf{X}\boldsymbol{1}_M = \mathbf{D}^x \boldsymbol{a}, \mathbf{Y}\boldsymbol{1}_N = \mathbf{D}^y \boldsymbol{b}\) by multiplying \(\mathbf{D}^x\) and \(\mathbf{D}^y\) in both sides of the third-line constraints in Eq. \ref{eq8}. As a result, a relaxed minimization problem can be written in the form,</p>
+
+\[\begin{equation}
+\begin{array}{c l l r}
+&amp; \displaystyle \min_{\mathbf{T}} \langle \mathbf{C}, \mathbf{T} \rangle  \stackrel{\text{def}}{=}\displaystyle \min_{\mathbf{T}} \sum_{i,j} \mathbf{C}_{i,j} \mathbf{T}_{i,j} &amp; &amp; \\
+\text{s.t.}	&amp; \mathbf{D}^x\mathbf{A} =\mathbf{X},           &amp; {\lvert\lvert \boldsymbol{\alpha}_i \rvert\rvert}_0 \leq K_1, 		&amp; 	 \\
+&amp; \mathbf{D}^y\mathbf{B} = \mathbf{Y},          &amp; {\lvert\lvert \boldsymbol{\beta}_i \rvert\rvert}_0 \leq K_2, 			&amp; 	 \\
+&amp; \mathbf{D}^x\boldsymbol{a}=\mathbf{X}\boldsymbol{1}_M,     &amp; \mathbf{D}^y\boldsymbol{b}=\mathbf{Y}\boldsymbol{1}_N,		                &amp;    \\
+&amp; \mathbf{T}\boldsymbol{1}_n = \boldsymbol{a},   &amp; \mathbf{T}^\top\boldsymbol{1}_m = \boldsymbol{b}. 	                &amp; 	
+\end{array}
+\label{eq9}
+\end{equation}\]
+
+<p>This relaxation adores the constraints on sparse dictionaries instead of coefficients, leading to two-fold benefits. On the one hand, the constraints \(\mathbf{D}^x\boldsymbol{a}=\mathbf{X}\boldsymbol{1}_M\),  and \(\mathbf{D}^y\boldsymbol{b}=\mathbf{Y}\boldsymbol{1}_N\) in Eq. \ref{eq9} change the sparse coefficient constraints into style dictionaries constraints, which helps to learn more favorable style dictionaries. On the other hand, it reduces the sub-problem with respect to \(\mathbf{A}\) (or, \(\mathbf{B}\)) into a standard sparse coding form, thereby avoiding the complex Sylvester equation. As interpreted hereafter, the relaxed problem can be approximately optimized using an alternative variable splitting method under the assumption of \(p\)-Wasserstein cost function.</p>
+
+<h3> The Solution of p-Wasserstein Case:</h3>
+
+<p>The cost function \(\mathbf{C}_{\boldsymbol{i,j}} \stackrel{\text{def}}{=}  c(\boldsymbol{d}^x_i, \boldsymbol{d}^y_j)\) is important to the optimal transport plan<d-cite key="peyre2019computational"></d-cite>. It turns out that the transport plan always exists when taking into account \(p (p \geq 1)\)-Wasserstein distance \(\boldsymbol{W}_p^p (\boldsymbol{\mu},\boldsymbol{\nu})\). For simplicity, we consider \(p=2\) Wasserstein distance, where the cost function is defined as \(\mathbf{C}_{i,j} = {\Vert\boldsymbol{d}^x_i-\boldsymbol{d}^y_j \Vert}^2_2\), which measures the distance of a pair of dictionary elements \((\boldsymbol{d}^x_i, \boldsymbol{d}^y_j)\). Clearly, we have \(\mathbf{C}_{\boldsymbol{i,j}}=0\) if \(\boldsymbol{d}^x_i = \boldsymbol{d}^y_j\).</p>
+
+<p>Recalling the relaxed model in Eq. \ref{eq9}, we first rewrite the constrained optimization problem into an unconstrained one based on regularization techniques and then apply the well-known alternative variable splitting algorithm to solve it approximately. By introducing the Lagrangian multiplier technique, the above problem can be reformulated into an unconstrained optimization problem and solved via an alternative minimization scheme as follows:</p>
+
+\[\begin{equation}
+\begin{aligned}
+    \begin{split}
+    \operatorname*{argmin}_{\{\mathbf{D}^x,\mathbf{D}^y, \mathbf{A},\mathbf{B}, \mathbf{T}\}} &amp; \gamma \sum_{i,j}  \mathbf{T}_{i,j} {\Vert\boldsymbol{d}^x_i-\boldsymbol{d}^y_j \Vert}^2_2  + {\big\Vert \mathbf{X}- \mathbf{D}^x  \mathbf{A} \big\Vert}_{F}^2+ {\big\Vert \mathbf{Y}- \mathbf{D}^y \mathbf{B} \big\Vert}_{F}^2 \\ + &amp; \lambda_x {\big\Vert \mathbf{X}\boldsymbol{1}_M- \mathbf{D}^x \boldsymbol{a} \big\Vert}_{F}^2 
+    + \lambda_y {\big\Vert \mathbf{Y}\boldsymbol{1}_M- \mathbf{D}^y\boldsymbol{a} \big\Vert}_{F}^2 \\ + &amp; \tau_x {\big\Vert\mathbf{T}\boldsymbol{1}_n - \boldsymbol{a} \big\Vert}_{2}^2  + \tau_y {\big\Vert\mathbf{T}^\top\boldsymbol{1}_m - \boldsymbol{b} \big\Vert}_{2}^2 	
+    \end{split}	
+\end{aligned}
+\label{eq10}
+\end{equation}\]
+
+<p>Where \(\gamma, \lambda_{x(y)}, \tau_{x(y)}\) and \(\kappa_{x(y)}\) are positive Lagrangian multipliers. Accordingly, the solution of Eq. \ref{eq10} convergent to that of Eq. \ref{eq9} when the Lagrangian multipliers go to infinity. The main idea of the alternating method is to solve the problem sequentially by fixing one variable from another. It is easy to see that Eq. \ref{eq9} can be divided into three sub-problems: sparse coding, style dictionaries learning and transport map inferring, respectively. For brevity, we describe the solution for the variables \(\mathbf{T}, \mathbf{D}^x, \mathbf{A}\), and \(\boldsymbol{a}\), and \(\mathbf{D}^y, \mathbf{B}\), and \(\boldsymbol{b}\) can be processed analogically.</p>
+
+<p><strong>Sparse coding:</strong>   By fixing \(\mathbf{T}, \mathbf{D}^x, \mathbf{D}^y\) and \(\boldsymbol{a}\),  \(\boldsymbol{b}\) in Eq. \ref{eq10}, the optimization problem w.r.t. the variables  \(\mathbf{A}\) and \(\mathbf{B}\) is then reduced into a standard sparse encoding problem. Considering \(\mathbf{X}\boldsymbol{1}_M= \mathbf{D}^x \boldsymbol{a}\),\(\mathbf{Y}\boldsymbol{1}_N = \mathbf{D}^y \boldsymbol{b}\), the variables \(\mathbf{A}\) and \(\mathbf{B}\) only have sparse constraints. Taking the coefficient \(\mathbf{A}\) for example, the representation vectors \(\boldsymbol{\alpha}_i\) for each example \(\boldsymbol{x}_i\) in \(\mathbf{X}\) is the \(i\)-th column of \(\mathbf{A}\), which is attained by solving the following problem,</p>
+
+\[\begin{equation}
+    \begin{aligned}
+    \min_{\boldsymbol{\alpha}_i} {\lvert\lvert \boldsymbol{\alpha}_i \rvert\rvert}_0, \quad  s.t. \quad \boldsymbol{x}_i = \mathbf{D}^x\boldsymbol{\alpha}_i. 
+    \end{aligned}
+    \label{eq11}
+\end{equation}\]
+
+<p>As aforementioned, the sparse coding problem of Eq. \ref{eq11} can be solved by many existing methods such as  matching pursuit (MP) or orthogonal matching pursuit (OMP) algorithms<d-cite key="aharon2006k, chen1989orthogonal"></d-cite>. We here use the OMP method for ease of implementation. Once the coefficients \(\mathbf{A}\) and \(\mathbf{B}\) are obtained, we have the row sums of the coefficients — that is, \(\boldsymbol{a}=\mathbf{A}\boldsymbol{1}_M\), \(\boldsymbol{b}=\mathbf{B}\boldsymbol{1}_N\) and they provide a discrete probability measure for  dictionary atoms. It is worth mentioning here that the probability distributions \(\boldsymbol{a}\) and \(\boldsymbol{b}\) must be positive, while the learned coefficients may be negative here. 
+It is possible to remedy \(\boldsymbol{d}^x_i=-\boldsymbol{d}^x_i\) and \(\mathbf{A}(i,:) =-\mathbf{A}(i,:)\) without affecting the sparse encoding process when the \(i\)-th row sum \(\boldsymbol{a}_i\) is negative. The non-negative sparse coding is also an alternative way for remedy in practice.  Without the ambiguity \(\boldsymbol{a}\) and \(\boldsymbol{b}\) are also denoted as the normalized counterparts.</p>
+
+<p><strong>Learning style dictionaries:</strong>   By analogy, we then fix the coefficients  \(\mathbf{A}, \mathbf{B}\) and transport map \(\mathbf{T}\) and update the style dictionaries \(\mathbf{D}^x\) and \(\mathbf{D}^y\), respectively. Considering the relaxed constraints \(\mathbf{X}\boldsymbol{1}_M= \mathbf{D}^x \boldsymbol{a}, \mathbf{Y}\boldsymbol{1}_N = \mathbf{D}^y \boldsymbol{b}\), we rewrite the Tikhonov regularization form of the sub-problem of Eq. \ref{eq10} with respect to \(\mathbf{D}^x\) (or, \(\mathbf{D}^y\)) as,</p>
+
+\[\begin{equation}
+    \begin{aligned}
+    \begin{split}
+    \operatorname*{argmin}_{\{\boldsymbol{d}^x_i\}} &amp;{\Vert \mathbf{D}^x\mathbf{A} - \mathbf{X} \Vert}_{F}^2 + \lambda_x {\Vert \mathbf{D}^x \boldsymbol{a} - \mathbf{X}\boldsymbol{1}_M \Vert}_{2}^2 \\+&amp; \gamma \sum_{i,j} \mathbf{T}_{i,j} {\Vert\boldsymbol{d}^x_i-\boldsymbol{d}^y_j \Vert}^2_2  
+    \end{split}	
+    \end{aligned}
+    \label{eq12}
+\end{equation}\]
+
+<p>where \(\lambda_x\) and \(\tau_x\) are the positive weights. Accordingly, Eq. \ref{eq10} can be viewed as a regularized dictionary learning problem. To learn the redundant style dictionaries, we use the famous K-SVD algorithm<d-cite key="aharon2006k"></d-cite> to update each element \(\boldsymbol{d}^x_i\) of dictionary \(\mathbf{D}^x\) sequentially. Notice that the original K-SVD algorithm is not directly applicable due to the regularization terms in Eq. \ref{eq12}. We instead introduce an extended K-SVD algorithm for updating dictionaries. For clarity, we first review the original K-SVD algorithm<d-cite key="aharon2006k"></d-cite> and show how to extend it to the proposed model.</p>
+
+<p><strong>The Extended K-SVD Algorithm:</strong>  In the K-SVD algorithm<d-cite key="aharon2006k"></d-cite>, sparse representation is to factorized an image \(\mathbf{X}\) into a multiple form of the dictionary \(\mathbf{D}^x\) and coefficient \(\mathbf{A}\), that is, \(\mathbf{X}=\mathbf{D}^x\mathbf{A}\). We now focus on the style dictionaries-learning process by fixing the sparse coefficient \(\mathbf{A}\). The dictionary \(\mathbf{D}^x\) can be updated by minimizing the objective function,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\begin{split}
+   {\Vert \mathbf{X}-\mathbf{D}^x\mathbf{A} \Vert}_{F}^2  = &amp;  \left\| \mathbf{X}- \sum_{j=1}^n \boldsymbol{d}^x_j \boldsymbol{\alpha}_{T}^j \right\|_{F}^2 
+  =  \left\| \left( \mathbf{X}- \sum_{j \neq k} \boldsymbol{d}^x_j \boldsymbol{\alpha}_{T}^j \right)  - \boldsymbol{d}^x_k \boldsymbol{\alpha}_{T}^k  \right\|_{F}^2 \\
+  =  &amp; \left\| \mathbf{E}^k- \boldsymbol{d}^x_k \boldsymbol{\alpha}_{T}^k  \right\|_{F}^2
+\end{split}	
+\end{aligned}
+\label{eq13}
+\end{equation}\]
+
+<p>where \(\mathbf{E}^k=\mathbf{X}- \sum_{j \neq k} \boldsymbol{d}^x_j \boldsymbol{\alpha}_{T}^j\) is the residual part that not involves the \(k\)-th dictionary element \(\boldsymbol{d}^x_k\), and \(\alpha_{T}^k\) is the \(k\)-th row of the coefficient matrix \(\mathbf{A}\).  With the above form, \(\boldsymbol{d}_i^x\) is updated as the first left eigenvector given by SVD algorithm based on the K-SVD algorithm<d-cite key="aharon2006k"></d-cite>. The basic idea here is to decompose the term \(\mathbf{D}^x \mathbf{A}\) into the sum of \(n\) rank-1 matrices, where only one dictionary element \(\boldsymbol{d}^x_k\) is involved and can be updated independently in each time when fixing the remainder \(\mathbf{E}^k\). This strategy helps to learn the redundant dictionaries more efficiently.</p>
+
+<p>The process can be analogically extended to the regularization case. Let \(\mathbf{E}^k =\mathbf{X}-\sum_{k\neq i} \boldsymbol{d}_k^x \boldsymbol{\alpha}_{k}^T\) and \(\mathbf{F}^k= \mathbf{X}\mathbf{1}_{M}-\sum_{k\neq i} \boldsymbol{d}_k^x \boldsymbol{a}_{k}^T\) be the residual of \({\Vert \mathbf{D}^x\mathbf{A} - \mathbf{X} \Vert}_{F}^2\) and \({\Vert \mathbf{D}^x \boldsymbol{a} - \mathbf{X}\boldsymbol{1}_M \Vert}_{2}^2\) without using the element \(\boldsymbol{d}_i^x\), where \(\boldsymbol{\alpha}_{k}\) and \(\boldsymbol{a}_{k}\) are the \(k\)-th row vector of \(\mathbf{A}\) and  \(\boldsymbol{a}\). With this notation, the first two terms in Eq. \ref{eq12} can be rewritten as \({\Vert \mathbf{E}^k -\boldsymbol{d}_i^x \boldsymbol{\alpha}_{i}^T \Vert}_{F}^2\) and \({\Vert \mathbf{F}^k - \boldsymbol{d}_i^x \boldsymbol{a}_{i}^T \Vert}_{F}^2\), respectively. The sub-problem Eq. \ref{eq12} with respect to the \(k\)-th dictionary \(\boldsymbol{d}^x_k\) can be rewritten into the form,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\begin{split}
+\operatorname*{argmin}_{\boldsymbol{d}^x_k} &amp; \left\| \mathbf{E}^k- \boldsymbol{d}^x_k \boldsymbol{\alpha}_{T}^k  \right\|_{F}^2 + \lambda_x \left\| \mathbf{F}^k- \boldsymbol{d}^x_k \boldsymbol{a}_{T}^k  \right\|_{F}^2 + &amp; \gamma \sum_{j} \mathbf{T}_{k,j} {\Vert\boldsymbol{d}^x_k-\boldsymbol{d}^y_j \Vert}^2_2.  
+\end{split}	
+\end{aligned}
+\label{eq14}
+\end{equation}\]
+
+<p>It is easy to verify that \(\boldsymbol{d}_i^x\) has a closed-form solution because the objective function in Eq. \ref{eq14} is quadratic with respect to \(\boldsymbol{d}^x_k\). The last two terms in Eq. \ref{eq14} can be treated as the regularization terms compared with Eq. \ref{eq13} and such a regularization also helps to strengthen a more stable numerical solution. The reader is referred to the K-SVD algorithm<d-cite key="aharon2006k"></d-cite> for more details.</p>
+
+<p><strong>Optimal Transport:</strong>  The transport mapping \(\mathbf{T}\) over the learned style dictionaries is a standard optimal transport problem when fixing the style dictionaries \(\mathbf{D}^x, \mathbf{D}^y\) and coefficients \(\mathbf{A}, \mathbf{B}\), that is,</p>
+
+\[\begin{equation}
+\begin{aligned}
+    \begin{split}
+        &amp;\operatorname*{argmin}_{\mathbf{T}} \ 
+        \sum_{i,j} \mathbf{T}_{i,j} {\Vert\boldsymbol{d}^x_i-\boldsymbol{d}^y_j \Vert}^2_2,  \\ &amp; s.t.  \quad \mathbf{T}\boldsymbol{1}_n = \boldsymbol{a}, \  \mathbf{T}^\top\boldsymbol{1}_m = \boldsymbol{b}.	
+    \end{split}	
+\end{aligned}
+\label{eq15}
+\end{equation}\]
+
+<p>It is worth noting that a discrete optimal transport can be solved by linear programming, while the computational cost increases significantly over the large-scale samplings<d-cite key="peyre2019computational"></d-cite>. It is empirically solvable in our case due to the small size of style dictionaries, which forms one of the cores of our method. Notice that \(\boldsymbol{a}\) and \(\boldsymbol{b}\) in Eq. \ref{eq12} represent the normalized counterparts.</p>
+
+<div class="row justify-content-md-center"> 
+  <div class="col col-lg-8">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/algorithm1-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/algorithm1-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/algorithm1-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/algorithm1.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+</div>
+
+<p><strong>Entropy-Regularized Optimal Transport:</strong>  It is well-known that an exact solution to optimal transport based on the network flow method has computational complexity \(O\left(n^3\right)\)  for the \(n\) samplings<d-cite key="peyre2019computational"></d-cite>. The solution may be unavailable when \(n\) exceeds thousands of samplings in a general PC platform. Instead, we resort to a more efficient entropy-regularized optimal transport,</p>
+
+\[\begin{equation}
+\begin{aligned}
+\begin{split}
+    \operatorname*{argmin}_{\mathbf{T}}&amp; \ \sum_{i,j}  \mathbf{C}_{i,j}  \mathbf{T}_{i,j} + \eta H(\mathbf{T}) \\ 
+     s.t. \quad &amp;\mathbf{T}\boldsymbol{1}_m = \boldsymbol{a}, \quad  \mathbf{T}^\top\boldsymbol{1}_n = \boldsymbol{b}.
+\end{split}	
+\end{aligned}
+\end{equation}
+\label{eq16}\]
+
+<p>where \(H(\mathbf{T}) =  \sum_{i,j}\mathbf{T}_{i,j} (log (\mathbf{T}_{i,j})-1)\) is the negative entropic regularization, and \(\eta\) is the positive regularization parameter. As interpreted in<d-cite key="cuturi2013sinkhorn"></d-cite>, the regularized model of Eq. \ref{eq16} is a convex optimization problem and can be solved with the Sinkhorn-Knopp algorithm. A detailed solution is also presented in Alg. \ref{alg1}. Note that the sub-problems in Alg. \ref{alg1} involve component-wise divide operators \(\oslash\) that can be computed efficiently.</p>
+
+<div class="row justify-content-md-center"> 
+  <div class="col col-lg-12">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/Fig4_full-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/Fig4_full-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/Fig4_full-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/Fig4_full.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+</div>
+
+<div class="caption">
+    Figure 4. Visual comparison of color transfer on natural images.  From left to right: (a) content images, (b) MKL<d-cite key="pitie2007linear"></d-cite>, (c) Regularized OT<d-cite key="ferradans2014regularized"></d-cite>, (d) PhotoNAS<d-cite key="an2020ultrafast"></d-cite>, (e) NeuralPreset<d-cite key="ke2023neural"></d-cite>, (f) our results, and (g) reference images.  (Zoom in for better view).
+</div>
+
+<h3> Image Synthesis:</h3>
+
+<p>Once the dictionaries \(\mathbf{D}^{x}\) and \(\mathbf{D}^{y}\) and transport map \(\mathbf{T}\) are obtained, given an image \(\mathbf{x}\) in style \(s_{x}\), it is then easy to reconstruct an image \(\hat{\mathbf{y}}\) with the style \(s_{y}\) by swapping the corresponding style dictionaries but keeping the sparse representing coefficients invariant, that is,</p>
+
+\[\begin{equation}
+    \begin{split}
+    \hat{\mathbf{y}}_i= \hat{\mathbf{D}}^{x} \boldsymbol{\alpha}_i
+    =\mathbf{T}({\mathbf{D}}^{y}) \boldsymbol{\alpha}_i,
+    \end{split}	
+\label{eq17}
+\end{equation}\]
+
+<p>where the \(k\)-th column of \(\hat{\mathbf{D}}^{x}\) is \(\hat{\boldsymbol{d}}^{x}_i=\mathbf{T}(\boldsymbol{d}^{y}_j)=\frac{\sum_{j=1}^n \mathbf{T}_{i,j} \boldsymbol{d}^y_j}{\sum_{j=1}^n \mathbf{T}_{i,j}}\), which can be viewed as a posterior mean estimate to define a one-to-one of the transfer function<d-cite key="rabin2014adaptive"></d-cite>, and \(\boldsymbol{\alpha}_{i}\) is the sparse coefficients of patch \(\mathbf{x}_{i}\). In most cases, the image \(\mathbf{x}\) is not exactly the same as training data — but is sampled from an identical distribution, the coefficients \(\boldsymbol{\alpha}_i\) for each patch \(\mathbf{x}_i\) can be learned based on the sparse coding Eq. \ref{eq14}. In the cases of photo-realistic image transfer, it may be preferable to add some constraints for more consistent local textures, for example, using a simple gradient regularization for image synthesis,</p>
+
+\[\begin{equation}
+	\begin{split}
+		\operatorname*{argmin}_{\hat{\mathbf{y}}} \    &amp; {\Vert \hat{\mathbf{y}} -\hat{\mathbf{D}}^{x} \boldsymbol{\alpha} \Vert}_{2}^2 + \rho {\Vert \nabla \hat{\mathbf{y}} - \nabla \mathbf{x} \Vert}_{2}^2\\
+	\end{split}	
+	\label{eq18}
+\end{equation}\]
+
+<p>where \(\nabla\) is the gradient operator and \(\rho\) is the parameter to weight the gradient regularization term. It is easy to verify that Eq. \ref{eq18} can be easily computed due to its closed-form solution.</p>
+
+<h2 id="experiment-results">Experiment Results</h2>
+
+<p>In this section, we extensively illustrate the performance of optimal style transfer and show the empirical evidence on two fundamental image-to-image translation tasks: color transform and artistic style transfer. In each scenario, the sparse coefficients and individual dictionaries are firstly learned using sparse representation and then an optimal transport map is derived on the learned dictionaries (See Fig. Fig. 1). The process is updated iteratively until it converges to a given stop criteria. The learned dictionaries are treated as individual feature styles for image reconstruction.</p>
+
+<div class="row justify-content-md-center"> 
+  <div class="col col-lg-12">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/Fig7_full-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/Fig7_full-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/Fig7_full-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/Fig7_full.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+</div>
+
+<div class="caption">
+    Figure 7. Visual results of artistic style transfer of the proposed method. The content images in the first column are transferred according to the given styles in the first row.  (Zoom in for better view).
+</div>
+
+<p>As shown in Fig. 6, the OT-based MKL mapping<d-cite key="pitie2007linear"></d-cite> and ROT model<d-cite key="ferradans2014regularized"></d-cite> faithfully convert the content color in both cases according to the guidance of the reference images. The former reveals color degradation with over-smoothing details (Fig. \ref{fig6-b}), while the latter exhibits block artifacts (Fig. \ref{fig6-c}) due to the sub-sampling strategy, although they can be partially rectified by some filtering methods. The neural transfer methods<d-cite key="an2020ultrafast,  ke2023neural"></d-cite> produce fine details but they may suffer from inappropriate color mapping, leading to over-saturated or under-saturated effects. In contrast, the proposed model (Fig. \ref{fig6-f})  greatly alleviates the drawbacks for better results due to the strategy of simultaneous representation and transformation, while the improvement is achieved at the expense of high computational cost of dictionary training and image reconstruction compared with the sub-sampling strategy.</p>
+
+<div class="row justify-content-md-center"> 
+  <div class="col col-lg-12">
+        <figure>
+
+  <picture>
+    
+    <source class="responsive-img-srcset" media="(max-width: 480px)" srcset="/assets/img/otsd/Fig8_full-480.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 800px)" srcset="/assets/img/otsd/Fig8_full-800.webp"></source>
+    <source class="responsive-img-srcset" media="(max-width: 1400px)" srcset="/assets/img/otsd/Fig8_full-1400.webp"></source>
+    
+
+    <!-- Fallback to the original file -->
+    <img src="/assets/img/otsd/Fig8_full.png" class="img-fluid" width="auto" height="auto" alt="zoom" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
+
+  </picture>
+
+</figure>
+
+    </div>
+</div>
+
+<div class="caption">
+    Figure 8. Visual comparison of artistic style transfer with deep learning methods: (a) Input content and style images, (b) AdaIN<d-cite key="huang2017arbitrary"></d-cite>, (c) WCT<d-cite key="li2017universal"></d-cite>, (d) PhotoWCT<d-cite key="li2018closed"></d-cite>, (e) WCT$^2$<d-cite key="yoo2019photorealistic"></d-cite> (f) StyTr$^2$<d-cite key="deng2022stytr2"></d-cite>, (g) QuantArt<d-cite key="huang2023quantart"></d-cite> and (h) our results.  (Zoom in for better view).
+</div>
+
+<h3> Photo-realistic Style Transfer:</h3>
+
+<p>We further show that the proposed model is applicable to artistic style transfer, especially the photo-realistic effects. As shown in Fig.  6, we present the transferred results with the artworks created by famous artists. It is clear that all cases have very complex content information composed of sophisticated painting strokes and multiple colors, and textures for aesthetic effects. To receive visual-pleasant results, we randomly select \(100K\) patches from content and reference images, and use \(1024\) dictionary elements for training. The optimal transport is solved by the entropy-regularized method<d-cite key="cuturi2013sinkhorn"></d-cite> with regularization parameter \(\gamma = 0.05\) and \(200\) iterations for each optimal transport step. The new model is possible to produce visual-pleasant transferred results with consistently aesthetic styles and well-preserved details. In Fig. Fig. 7, we additionally show the high-quality model performance in the scenarios of different reference styles, which demonstrate the benefits of sparse representation and optimal transport.</p>
+
+<p>In Fig. Fig. 8, we compare the transferred results with deep learning-based methods. The AdaIN model<d-cite key="huang2017arbitrary"></d-cite> and WCT method<d-cite key="huang2017arbitrary"></d-cite> are two well-known arbitrary image style transfer methods. As shown in Fig. 8b and Fig. 8c, both of them are capable of transforming the global features such as image colors and main structures for impressive results, however, they may have limitations in suppressing non-consistent local details. Recently, the transformer-based architecture shows great attention in many vision-based tasks. We here also include the StyTr\(^2\) model<d-cite key="deng2022stytr2"></d-cite> for comparison, however, it also suffers slight non-consistent local details in Fig. 8d despite the powerful transformer architecture. In addition, we also compare the transferred results with the photo-realistic methods: PhotoWCT model<d-cite key="li2018closed"></d-cite>, WCT\(^2\) method<d-cite key="yoo2019photorealistic"></d-cite> and QuantArt<d-cite key="huang2023quantart"></d-cite>, in which the non-consistent local details can be significantly suppressed as verified in Fig. 8e \(\sim\) Fig. 8g. Similarly, the proposed method also gives arise to photo-realistic results with more consistent local textures and details in \ref{fig8-h}. The results are also observed in Fig. Fig. 9. In summary, the proposed method is applicable for both natural and artistic images, and the results further demonstrate its ability in retrieving consistent details.</p>
+
+<p>Additionally, we present the quantitative performance against recent deep learning-based methods. Notice that an objective assessment is often difficult due to the lack of ground truth in aesthetic significance. As suggested in recent work<d-cite key="an2020ultrafast, deng2022stytr2, huang2023quantart"></d-cite>, we adopt the structural similarity (SSIM) of edge maps between content and transferred images to indicate detail preservation ability. We also take the structure fidelity into account based on the intrinsic image transfer (IIT) algorithm<d-cite key="huang2022intrinsic"></d-cite> in consideration of the robust structure-preserving property in varying illumination (color and brightness) conditions. Meanwhile, we introduce three deep learning-based evaluation metrics: LPIPS loss<d-cite key="zhang2018unreasonable"></d-cite>, Gram loss (VGG style features)<d-cite key="huang2017arbitrary, deng2022stytr2, huang2023quantart"></d-cite> and FID metric<d-cite key="heusel2017gans"></d-cite>, which measure the perceptual similarity between the content and generated images from the aspects of image content, style and visual fidelity, respectively.</p>
+
+<p>The evaluation is conducted on a small subset with 21 paired content and reference images sampled from of the WikiArt dataset<d-cite key="wikiart"></d-cite>. For fairness, all images are rescaled into \(512\times512\) resolution and the statistic results are listed in \ref{tab1}. As we can see, the results are consistent with the visual effects in Fig. Fig. 8. The AdaIN<d-cite key="huang2017arbitrary"></d-cite> method is efficient but has low performance of structural fidelity on both SSIM-edge and IIT indexes. The WCT<d-cite key="li2017universal"></d-cite> receives obvious improvements in structural similarity, but the perceptual similarity is decreased due to the over-smoothing local structures. The increased trend of structural similarity is also observed in both PhotoWCT<d-cite key="li2018closed"></d-cite> and WCT\(^2\)<d-cite key="yoo2019photorealistic"></d-cite> methods. Moreover, they have much better perception-based LPIPS, Gram loss, and FID metric, which can be also demonstrated from their photo-realistic transferred effects. The StyTr\(^2\)<d-cite key="deng2022stytr2"></d-cite> shows very similar effects as AdaIN method and the QuantArt<d-cite key="huang2023quantart"></d-cite> produce high-quality consistent structures, but has limited perceptual similarity in Gram loss and FID metric, which may be caused by the limited color transform in some cases. In contrast, the proposed method gives a fine balance between structural fidelity and perceptual similarity in content, style, and visual fidelity, which is observed in the visual effects in Fig. Fig. 8. The benefits mainly underpin the fact that sparse representation provides a simple but effective tool that is especially suitable for low-level or middle-level feature extraction, especially in the case of pursuing photo-realistic image transfer effects.</p>
+
+        </div>
+          
+        
+      </d-article>
+
+      <d-appendix>
+        <d-footnote-list></d-footnote-list>
+        <d-citation-list></d-citation-list>
+      </d-appendix>
+
+      <d-bibliography src="/assets/bibliography/paper_reference.bib"></d-bibliography><div id="giscus_thread" style="max-width: 960px; margin: 0 auto;">
+  <script>
+    let giscusTheme = localStorage.getItem("theme");
+    let giscusAttributes = {
+        "src": "https://giscus.app/client.js",
+        "data-repo": "Junqing-Huang/al-folio",
+        "data-repo-id": "MDEwOlJlcG9zaXRvcnk2MDAyNDM2NQ==",
+        "data-category": "Comments",
+        "data-category-id": "DIC_kwDOA5PmLc4CTBt6",
+        "data-mapping": "title",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "bottom",
+        "data-theme": giscusTheme,
+        "data-lang": "en",
+        "crossorigin": "anonymous",
+        "async": "",
+    };
+
+
+    let giscusScript = document.createElement("script");
+    Object.entries(giscusAttributes).forEach(([key, value]) => giscusScript.setAttribute(key, value));
+    document.getElementById("giscus_thread").appendChild(giscusScript);
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://giscus.app/?ref_noscript" rel="external nofollow noopener" target="_blank">comments powered by giscus.</a>
+</noscript>
+</div>
+<!-- Footer -->    
+    <footer class="fixed-bottom">
+      <div class="container mt-0">
+        © Copyright 2023 Junqing  Huang. Powered by <a href="https://jekyllrb.com/" target="_blank" rel="external nofollow noopener">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank" rel="external nofollow noopener">GitHub Pages</a>. Photos from <a href="https://unsplash.com" target="_blank" rel="external nofollow noopener">Unsplash</a>.
+
+      </div>
+    </footer>
+
+      <!-- Bootsrap & MDB scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha256-fgLAgv7fyCGopR/gBNq2iW3ZKIdqIcyshnUULC4vex8=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script>
+
+      
+      
+
+<!-- Scrolling Progress Bar -->
+<script type="text/javascript">
+  /*
+   * This JavaScript code has been adapted from the article 
+   * https://css-tricks.com/reading-position-indicator/ authored by Pankaj Parashar, 
+   * published on the website https://css-tricks.com on the 7th of May, 2014.
+   * Couple of changes were made to the original code to make it compatible 
+   * with the `al-foio` theme.
+   */
+  const progressBar = $("#progress");
+  /*
+   * We set up the bar after all elements are done loading.
+   * In some cases, if the images in the page are larger than the intended
+   * size they'll have on the page, they'll be resized via CSS to accomodate
+   * the desired size. This mistake, however, breaks the computations as the
+   * scroll size is computed as soon as the elements finish loading.
+   * To account for this, a minimal delay was introduced before computing the
+   * values.
+   */
+  window.onload = function () {
+    setTimeout(progressBarSetup, 50);
+  };
+  /*
+   * We set up the bar according to the browser.
+   * If the browser supports the progress element we use that.
+   * Otherwise, we resize the bar thru CSS styling
+   */
+  function progressBarSetup() {
+    if ("max" in document.createElement("progress")) {
+      initializeProgressElement();
+      $(document).on("scroll", function() {
+        progressBar.attr({ value: getCurrentScrollPosition() });
+      });
+      $(window).on("resize", initializeProgressElement);
+    } else {
+      resizeProgressBar();
+      $(document).on("scroll", resizeProgressBar);
+      $(window).on("resize", resizeProgressBar);
+    }
+  }
+  /*
+   * The vertical scroll position is the same as the number of pixels that
+   * are hidden from view above the scrollable area. Thus, a value > 0 is
+   * how much the user has scrolled from the top
+   */
+  function getCurrentScrollPosition() {
+    return $(window).scrollTop();
+  }
+
+  function initializeProgressElement() {
+    let navbarHeight = $("#navbar").outerHeight(true);
+    $("body").css({ "padding-top": navbarHeight });
+    $("progress-container").css({ "padding-top": navbarHeight });
+    progressBar.css({ top: navbarHeight });
+    progressBar.attr({
+      max: getDistanceToScroll(),
+      value: getCurrentScrollPosition(),
+    });
+  }
+  /*
+   * The offset between the html document height and the browser viewport
+   * height will be greater than zero if vertical scroll is possible.
+   * This is the distance the user can scroll
+   */
+  function getDistanceToScroll() {
+    return $(document).height() - $(window).height();
+  }
+
+  function resizeProgressBar() {
+    progressBar.css({ width: getWidthPercentage() + "%" });
+  }
+  // The scroll ratio equals the percentage to resize the bar
+  function getWidthPercentage() {
+    return (getCurrentScrollPosition() / getDistanceToScroll()) * 100;
+  }
+</script>
+
+    </div>
+  
+</body>
+</html>
